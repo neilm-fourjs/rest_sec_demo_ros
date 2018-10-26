@@ -9,33 +9,28 @@ IMPORT FGL encrypt
 IMPORT FGL compute_digest
 IMPORT FGL lib_log
 
+IMPORT FGL do_rest_request
+
 CONSTANT C_SOFTWARE = "FourJsTest"
 CONSTANT C_SOFTWAREVER = "0.1"
 CONSTANT C_TZ = "GMT"
-CONSTANT C_CON_TIMEOUT = 5
 
 CONSTANT C_HOST = "softwaretest.ros.ie"
 
-DEFINE m_txt STRING
-DEFINE m_arr DYNAMIC ARRAY OF RECORD
-	key STRING,
-	val STRING,
-	addToSig BOOLEAN
-	END RECORD
 DEFINE m_cert, m_empRegNo, m_taxYear STRING
 MAIN
 	DEFINE l_reqTarget STRING
 	DEFINE l_reply STRING
 	DEFINE l_stat SMALLINT
 
-	LET m_cert = "../certs/999962922" -- "1073032130"
+	LET m_cert = "../certs/999962922"
 	LET m_empRegNo = "8001274QH"
 	LET m_taxYear = "2018"
 
 	OPEN FORM frm FROM "testConnect"
 	DISPLAY FORM frm
 
-	DISPLAY ARRAY m_arr TO scr_arr.* ATTRIBUTES( ACCEPT=FALSE, CANCEL=FALSE )
+	DISPLAY ARRAY do_rest_request.m_headers TO scr_arr.* ATTRIBUTES( ACCEPT=FALSE, CANCEL=FALSE )
 		ON ACTION close EXIT DISPLAY
 		ON ACTION exit EXIT DISPLAY
 		ON ACTION get_emps
@@ -71,27 +66,28 @@ FUNCTION test1( l_reqTarget STRING, l_payload STRING )
 		LET l_method = "POST"
 	END IF
 
-	CALL m_arr.clear()
-	CALL arr_addItem("(request-target)", SFMT("%1 /%2",l_method.toLowerCase(), l_reqTarget), TRUE)
-	CALL arr_addItem( "Host", C_HOST, TRUE)
+	CALL do_rest_request.m_headers.clear()
+	CALL do_rest_request.arr_addItem("(request-target)", SFMT("%1 /%2",l_method.toLowerCase(), l_reqTarget), TRUE)
+	CALL do_rest_request.arr_addItem( "Host", C_HOST, TRUE)
 
 --	CALL arr_addItem( "Date", l_date, TRUE) -- Date can't be set manually!!
-	CALL arr_addItem( "X-Date", l_date, TRUE)
+	CALL do_rest_request.arr_addItem( "X-Date", l_date, TRUE)
 
 	IF l_method = "POST" THEN
 --		CALL arr_addItem( "X-HTTP-Method-Override","GET", TRUE)
-		CALL arr_addItem( "Digest", compute_digest.ComputeHash(l_payload,"sha512"), TRUE )
-		CALL arr_addItem( "Content-Type","application/x-www-form-urlencoded", FALSE)
+		CALL do_rest_request.arr_addItem( "Digest", compute_digest.ComputeHash(l_payload,"sha512"), TRUE )
+		--CALL arr_addItem( "Content-Type","application/x-www-form-urlencoded", FALSE)
+		CALL do_rest_request.arr_addItem( "Content-Type","application/json", FALSE)
 	END IF
 
-	FOR x = 1 TO m_arr.getLength()
-		IF m_arr[x].addToSig THEN
+	FOR x = 1 TO do_rest_request.m_headers.getLength()
+		IF do_rest_request.m_headers[x].addToSig THEN
 			IF x > 1 THEN LET l_headers = l_headers.append(" ") END IF
-			LET l_headers = l_headers.append(m_arr[x].key.toLowerCase())
+			LET l_headers = l_headers.append(do_rest_request.m_headers[x].key.toLowerCase())
 		END IF
 	END FOR
 
-	LET l_signed = generateSignature.fromArray( m_arr )
+	LET l_signed = generateSignature.fromArray( do_rest_request.m_headers )
 
 	CALL disp("URL: "||l_url)
 	CALL disp("KeyId: "||l_keyId)
@@ -99,7 +95,7 @@ FUNCTION test1( l_reqTarget STRING, l_payload STRING )
 	CALL disp("Date: "||l_date)
 	CALL disp("To Sign: \n"||l_signed)
 	DISPLAY BY NAME l_url, l_headers, l_date, l_keyId, l_signed
-	DISPLAY ARRAY m_arr TO scr_arr.*
+	DISPLAY ARRAY do_rest_request.m_headers TO scr_arr.*
 		BEFORE DISPLAY EXIT DISPLAY
 	END DISPLAY
 
@@ -117,93 +113,6 @@ FUNCTION test1( l_reqTarget STRING, l_payload STRING )
 	DISPLAY BY NAME l_reply
 	CALL disp("Finished test1.")
 	RETURN l_stat, l_reply
-END FUNCTION
-
---------------------------------------------------------------------------------
--- a simple GET doesn't need Digest or X-HTTP-Method-Override
--- POST does require a Digest
-FUNCTION do_rest_request(l_method STRING, l_url STRING, l_signature STRING, l_payload STRING )
-	DEFINE l_req com.HttpRequest
-	DEFINE l_resp com.HTTPResponse
-	DEFINE l_info RECORD
-		status SMALLINT,
-		header STRING
-	END RECORD
-	DEFINE x SMALLINT
-	DEFINE l_txt STRING
-
-	CALL disp(SFMT("Create '%1'  ...",l_url))
-	LET l_req = com.HttpRequest.Create(l_url)
-	CALL disp(SFMT("setMethod %1 ...",l_method))
-	CALL l_req.setMethod(l_method)
-
-	CALL disp("setHeaders ...")
-	FOR x = 2 TO m_arr.getLength()
-		CALL disp( SFMT("setHeader(%1,%2)",m_arr[x].key, m_arr[x].val) )
-		CALL l_req.setHeader(m_arr[x].key, m_arr[x].val)
-	END FOR
-	CALL disp( SFMT("setHeader(%1,%2)","Signature", l_signature) )
-	CALL l_req.setHeader("Signature",l_signature)
-	CALL l_req.setConnectionTimeOut( C_CON_TIMEOUT )
-	IF l_method = "GET" THEN
-		CALL disp("doRequest ...")
-		TRY
-			CALL l_req.doRequest()
-		CATCH
-			LET l_txt = "Failed to doRequest for "||l_url||" "||STATUS||" "||ERR_GET(STATUS)
-			CALL disp( l_txt  )
-			RETURN l_txt
-		END TRY
-	ELSE
-		CALL disp(SFMT("doTextRequest('%1') ...",l_payload))
-		TRY
-			CALL l_req.doTextRequest( l_payload )
-		CATCH
-			LET l_txt = "Failed to doTextRequest for "||l_url||" "||STATUS||" "||ERR_GET(STATUS)
-			CALL disp( l_txt  )
-			RETURN l_txt
-		END TRY
-	END IF
-
-	CALL disp("getResponse ...")
-	TRY
-		LET l_resp = l_req.getResponse()
-	CATCH
-		LET l_txt =  "Failed to getResponse for "||l_url||" "||STATUS||" "||ERR_GET(STATUS)
-		CALL disp( l_txt )
-		RETURN l_txt
-	END TRY
-
-	LET l_info.status = l_resp.getStatusCode()
-	IF l_info.status != 200 THEN
-		CALL disp( "Failed:"|| l_info.status )
---		RETURN
-	ELSE
-		CALL disp( "Success!" )
-	END IF
-
-	LET l_info.header = l_resp.getHeader("Content-Type")
-	CALL disp( "StatusCode:"||l_info.status )
-	CALL disp( "Header:"||l_info.header )
-	LET l_txt = l_resp.getTextResponse()
-	CALL disp( "Response:"||l_txt )
-
-	RETURN l_info.status,l_txt 
-END FUNCTION
---------------------------------------------------------------------------------
-FUNCTION disp(l_txt STRING)
-	DISPLAY l_txt
-	LET l_txt = CURRENT||":"||l_txt
-	CALL log(l_txt)
-	LET m_txt = m_txt.append( l_txt||"\n" )
-	DISPLAY BY NAME m_txt
-	CALL ui.Interface.refresh()
-END FUNCTION
---------------------------------------------------------------------------------
-FUNCTION arr_addItem(l_key STRING,l_val STRING, l_addToSig BOOLEAN)
-	LET m_arr[m_arr.getLength()+1].key = l_key
-	LET m_arr[m_arr.getLength()].val = l_Val
-	LET m_arr[m_arr.getLength()].addToSig = l_addToSig
 END FUNCTION
 --------------------------------------------------------------------------------
 FUNCTION process_rpn( l_reply STRING )
@@ -266,10 +175,8 @@ FUNCTION add_emp()
 	DEFINE dummy RECORD
 		requestId STRING,
 		newEmployeeDetails DYNAMIC ARRAY OF RECORD
-			employeeID RECORD
-				employeePpsn STRING,
-				employeeID STRING
-			END RECORD,
+			employeePpsn STRING,
+			employeeID STRING,
 			name RECORD
 				firstName STRING,
 				familyName STRING
@@ -284,14 +191,14 @@ FUNCTION add_emp()
 	OPEN WINDOW w1 WITH FORM "new_emp"
 	LET int_flag = FALSE
 	LET dummy.requestId = security.RandomGenerator.CreateUUIDString()
-	LET dummy.newEmployeeDetails[1].employeeID.employeeID = 1
-	LET dummy.newEmployeeDetails[1].employeeID.employeePpsn = "123"
-	LET dummy.newEmployeeDetails[1].name.firstName = "Neil"
-	LET dummy.newEmployeeDetails[1].name.familyName = "Martin"
+	LET dummy.newEmployeeDetails[1].employeeID = 1
+	LET dummy.newEmployeeDetails[1].employeePpsn = "7027010WA"
+	LET dummy.newEmployeeDetails[1].name.firstName = "Ralph"
+	LET dummy.newEmployeeDetails[1].name.familyName = "Johnston"
 	LET dummy.newEmployeeDetails[1].employmentStartDate = TODAY
 
-	INPUT BY NAME dummy.newEmployeeDetails[1].employeeID.employeeID, 
-								dummy.newEmployeeDetails[1].employeeID.employeePpsn,
+	INPUT BY NAME dummy.newEmployeeDetails[1].employeeID, 
+								dummy.newEmployeeDetails[1].employeePpsn,
 								dummy.newEmployeeDetails[1].name.firstName,
 								dummy.newEmployeeDetails[1].name.familyName,
 								dummy.newEmployeeDetails[1].employmentStartDate WITHOUT DEFAULTS

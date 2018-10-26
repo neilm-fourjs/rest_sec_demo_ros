@@ -6,4 +6,9 @@
 		<PATH>$(res.path.demo)</PATH>
 		<MODULE>sha512_test</MODULE>
 	</EXECUTION>
+	<UA_OUTPUT>
+		<PROXY>$(res.uaproxy.cmd)</PROXY>
+		<PUBLIC_IMAGEPATH>$(res.public.resources)</PUBLIC_IMAGEPATH>
+		<GWC-JS>gbc-njm-current</GWC-JS>
+	</UA_OUTPUT>
 </APPLICATION>
