@@ -1,0 +1,63 @@
+{
+  "employerName": "White, White And White",
+  "employerRegistrationNumber": "8001274QH",
+  "dateTimeEffective": "2018-10-31T15:37:15.696Z",
+  "rpns": [
+    {
+      "rpnNumber": "2",
+      "employeeID": {
+        "employeePpsn": "7027010WA",
+        "employmentID": "1"
+      },
+      "rpnIssueDate": "2018-10-31",
+      "name": {
+        "firstName": "Ralph",
+        "familyName": "Johnston"
+      },
+      "effectiveDate": "2018-01-01",
+      "endDate": "2018-12-31",
+      "incomeTaxCalculationBasis": "CUMULATIVE",
+      "exclusionOrder": false,
+      "yearlyTaxCredits": 1650,
+      "taxRates": [
+        {
+          "index": 1,
+          "taxRatePercent": 20,
+          "yearlyRateCutOff": 34550
+        },
+        {
+          "index": 2,
+          "taxRatePercent": 40
+        }
+      ],
+      "payForIncomeTaxToDate": 0,
+      "incomeTaxDeductedToDate": 0,
+      "uscStatus": "ORDINARY",
+      "uscRates": [
+        {
+          "index": 3,
+          "uscRatePercent": 4.75,
+          "yearlyUSCRateCutOff": 70044
+        },
+        {
+          "index": 2,
+          "uscRatePercent": 2,
+          "yearlyUSCRateCutOff": 19372
+        },
+        {
+          "index": 1,
+          "uscRatePercent": 0.5,
+          "yearlyUSCRateCutOff": 12012
+        },
+        {
+          "index": 4,
+          "uscRatePercent": 8
+        }
+      ],
+      "payForUSCToDate": 0,
+      "uscDeductedToDate": 0,
+      "lptToDeduct": 0,
+      "prsiExempt": false
+    }
+  ]
+}

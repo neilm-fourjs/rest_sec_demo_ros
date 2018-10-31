@@ -175,8 +175,10 @@ FUNCTION add_emp()
 	DEFINE dummy RECORD
 		requestId STRING,
 		newEmployeeDetails DYNAMIC ARRAY OF RECORD
-			employeePpsn STRING,
-			employeeID STRING,
+			employeeID RECORD
+				employeePpsn STRING,
+				employmentID STRING
+			END RECORD,
 			name RECORD
 				firstName STRING,
 				familyName STRING
@@ -191,14 +193,14 @@ FUNCTION add_emp()
 	OPEN WINDOW w1 WITH FORM "new_emp"
 	LET int_flag = FALSE
 	LET dummy.requestId = security.RandomGenerator.CreateUUIDString()
-	LET dummy.newEmployeeDetails[1].employeeID = 1
-	LET dummy.newEmployeeDetails[1].employeePpsn = "7027010WA"
+	LET dummy.newEmployeeDetails[1].employeeID.employmentID = 1
+	LET dummy.newEmployeeDetails[1].employeeID.employeePpsn = "7027010WA"
 	LET dummy.newEmployeeDetails[1].name.firstName = "Ralph"
 	LET dummy.newEmployeeDetails[1].name.familyName = "Johnston"
 	LET dummy.newEmployeeDetails[1].employmentStartDate = TODAY
 
-	INPUT BY NAME dummy.newEmployeeDetails[1].employeeID, 
-								dummy.newEmployeeDetails[1].employeePpsn,
+	INPUT BY NAME dummy.newEmployeeDetails[1].employeeID.employmentID, 
+								dummy.newEmployeeDetails[1].employeeID.employeePpsn,
 								dummy.newEmployeeDetails[1].name.firstName,
 								dummy.newEmployeeDetails[1].name.familyName,
 								dummy.newEmployeeDetails[1].employmentStartDate WITHOUT DEFAULTS

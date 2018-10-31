@@ -1,0 +1,62 @@
+{
+  "employerName": "White, White And White",
+  "employerRegistrationNumber": "8001274QH",
+  "taxYear": 2018,
+  "totalRPNCount": 1,
+  "dateTimeEffective": "2018-10-17T10:04:31.743+01:00",
+  "rpns": [
+    {
+      "rpnNumber": "1",
+      "employeeID": {
+        "employeePpsn": "7022963IA",
+        "employmentID": "0"
+      },
+      "rpnIssueDate": "2018-10-10",
+      "employerReference": "",
+      "name": {
+        "firstName": "Pasquale",
+        "familyName": "Monahan"
+      },
+      "effectiveDate": "2018-10-10",
+      "endDate": "2018-12-31",
+      "incomeTaxCalculationBasis": "WEEK_1",
+      "exclusionOrder": false,
+      "yearlyTaxCredits": 4950,
+      "taxRates": [
+        {
+          "index": 1,
+          "taxRatePercent": 20,
+          "yearlyRateCutOff": 43550
+        },
+        {
+          "index": 2,
+          "taxRatePercent": 40
+        }
+      ],
+      "payForIncomeTaxToDate": 0,
+      "incomeTaxDeductedToDate": 0,
+      "uscStatus": "ORDINARY",
+      "uscRates": [
+        {
+          "index": 2,
+          "uscRatePercent": 2,
+          "yearlyUSCRateCutOff": 19372
+        },
+        {
+          "index": 3,
+          "uscRatePercent": 4.75,
+          "yearlyUSCRateCutOff": 70044
+        },
+        {
+          "index": 1,
+          "uscRatePercent": 0.5,
+          "yearlyUSCRateCutOff": 12012
+        },
+        {
+          "index": 4,
+          "uscRatePercent": 8
+        }
+      ]
+    }
+  ]
+}
